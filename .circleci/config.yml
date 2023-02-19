@@ -19,24 +19,26 @@ jobs:
             node --version => v18.0.0
             sudo apt install nodejs
             echo "--------- The images is Building ------------"
-            docker build -t location ./modules/location
-            docker tag location newthingade/location:v1
-            docker build -t location_svc ./modules/location_svc
-            docker tag location_svc newthingade/location_svc:v1
+            docker build -t observability-backend-service ./reference-app/backend
+            docker tag location newthingade/observability-backend-service:v1
+          
+            docker build -t location_svc ./reference-app/frontend
+            docker tag location_svc newthingade/observability-frontend-app:v1
             
-            docker build -t api_people ./modules/api_people
-            docker tag api_people newthingade/api_people:v1
-            docker build -t api_connections ./modules/api_connections
-            docker tag api_connections newthingade/api_connections:v1
+            docker build -t api_people ./reference-app/trial
+            docker tag api_people newthingade/observability-trial-service:v1
+
             echo "-------- All images succesfully built----------"
+
             echo " ------- login in to hub--------"
+
             docker login -u newthingade -p $DOCKERPASS
+
             echo "-------------- Pushing images to dockerhub-------"
             
-            docker push newthingade/location:v1
-            docker push newthingade/location_svc:v1
-            docker push newthingade/api_people:v1
-            docker push newthingade/api_connections:v1
+            docker push newthingade/observability-backend-service:v1
+            docker push newthingade/observability-frontend-app:v1
+            docker push newthingade/observability-trial-service:v1
 workflows:
   default:
     jobs:

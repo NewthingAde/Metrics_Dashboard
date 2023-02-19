@@ -3,7 +3,10 @@
 ## Verify the monitoring installation
 
 *TODO:* run `kubectl` command to show the running pods and services for all components. Take a screenshot of the output and include it here to verify the installation
-
+### Monitoring pods
+![1](https://user-images.githubusercontent.com/80678596/219878345-03c9b7a0-51ec-4938-a0a4-9934375d1b3b.png)
+### Monitoring service
+![monitoring_svc](https://user-images.githubusercontent.com/80678596/219878481-82b00c61-b08a-4967-bc89-2d099075488d.png)
 ## Setup the Jaeger and Prometheus source
 *TODO:* Expose Grafana to the internet and then setup Prometheus as a data source. Provide a screenshot of the home page after logging into Grafana.
 
@@ -51,3 +54,53 @@ Description:
 
 ## Final Dashboard
 *TODO*: Create a Dashboard containing graphs that capture all the metrics of your KPIs and adequately representing your SLIs and SLOs. Include a screenshot of the dashboard here, and write a text description of what graphs are represented in the dashboard.  
+
+
+
+
+
+
+
+
+# Keep
+/etc/rancher/k3s/k3s.yaml
+
+/var/lib/rancher/k3s/server/node-token
+
+
+
+
+
+
+
+
+# Run from the directory that contains the Vagrantfile
+            vagrant up
+            vagrant ssh
+            kubectl version
+
+# Installing Helm
+            curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+
+# Installing Prometheus 
+            kubectl create namespace monitoring
+            helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+# helm repo add stable https://kubernetes-charts.storage.googleapis.com t (his is deprecated)
+            helm repo add stable https://charts.helm.sh/stable
+            helm repo update
+            helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --kubeconfig /etc/rancher/k3s/k3s.yaml
+
+# Install Jaeger
+
+            kubectl create namespace observability
+            kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/crds/jaegertracing.io_jaegers_crd.yaml
+            kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/service_account.yaml
+            kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/role.yaml
+            kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/role_binding.yaml
+            kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/operator.yaml
+
+# Cluster wide Jaeger
+
+            kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/cluster_role.yaml
+            kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/cluster_role_binding.yaml

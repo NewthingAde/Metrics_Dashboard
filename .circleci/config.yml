@@ -28,7 +28,7 @@ jobs:
             docker tag observability-frontend-app newthingade/observability-frontend-app:latest
             
             docker build -t observability-trial-app ./reference-app/trial
-            docker tag observability-trial-app: newthingade/observability-trial-app:latest
+            docker tag observability-trial-app newthingade/observability-trial-app:latest
 
             echo "-------- All images succesfully built----------"
 

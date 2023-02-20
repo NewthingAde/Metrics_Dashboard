@@ -1,6 +1,7 @@
-import logging,time
+import logging, time
 from flask import Flask, render_template, request
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentracing_instrumentation.request_context import get_current_span, span_in_context
 from prometheus_flask_exporter import PrometheusMetrics
 from prometheus_client import Counter, Summary, make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
@@ -14,52 +15,31 @@ app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
 
-metrics = PrometheusMetrics(app)
-# static information as metric
-metrics.info("app_info", "Application info", version="1.0.3")
-
-logging.getLogger("").handlers = []
-logging.basicConfig(format="%(message)s", level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-# Add prometheus wsgi middleware to route /metrics requests
-app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
-    '/metrics': make_wsgi_app()
-})
-
-# Adding additional default metrics
-metrics.register_default(
-    metrics.counter(
-        'request_by_path_counter', 'Request count by request path',
-        labels={'path': lambda: request.path}
-    )
-)
-
 def init_tracer(svc):
-
+    logging.getLogger('').handlers = []
+    logging.basicConfig(format='%(message)s', level=logging.DEBUG)
     config = Config(
         config={
-            "sampler": {"type": "const", "param": 1},
-            "logging": True,
-            "reporter_batch_size": 1,
+            'sampler': {
+                'type': 'const',
+                'param': 1,
+            },
+            'logging': True,
         },
         svc_name=svc,
-        validate=True,
-        metrics_factory=PrometheusMetricsFactory(service_name_label=svc),
     )
-
+    # this call also sets opentracing.tracer
     return config.initialize_tracer()
 
-flask_tracer = FlaskTracing(init_tracer("frontend"), True, app)
+metrics = PrometheusMetrics(app, group_by='endpoint')
 
 # Decorate function with metric.
 @s.time()
-@app.route("/")
+@app.route('/')
 def homepage():
-    with init_tracer("frontend").start_span('homepage') as span:
-        span.set_tag('message', "Homepage")
-    
-    return render_template("main.html")
+    with  init_tracer('frontend').start_span('main.html') as span:
+        span.set_tag('message', 'Hello from main!')
+        return render_template("main.html")
 
 # Endpoint that returns 4xx error
 @app.route("/client-error")
@@ -76,11 +56,6 @@ def client_error():
 })
 def server_error():
     return "5xx Error", 500
-
-
-# Metric to track time spent and requests made.
-s = Summary('request_processing_seconds', 'Time spent processing request')
-c = Counter('my_failures', 'Description of counter')
 
 if __name__ == "__main__":
     app.run()

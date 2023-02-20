@@ -24,8 +24,7 @@ logging.getLogger("").handlers = []
 logging.basicConfig(format="%(message)s", level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-
-def init_tracer(service):
+def init_tracer(svc):
 
     config = Config(
         config={
@@ -33,23 +32,20 @@ def init_tracer(service):
             "logging": True,
             "reporter_batch_size": 1,
         },
-        service_name=service,
+        service_name=svc,
         validate=True,
-        metrics_factory=PrometheusMetricsFactory(service_name_label=service),
+        metrics_factory=PrometheusMetricsFactory(service_name_label=svc),
     )
 
     # this call also sets opentracing.tracer
     return config.initialize_tracer()
 
-
-tracer = init_tracer("trial")
-flask_tracer = FlaskTracing(tracer, True, app)
+flask_tracer = FlaskTracing(init_tracer("trial"), True, app)
 
 
 @app.route("/")
 def homepage():
     return render_template("main.html")
-
 
 @app.route("/trace")
 def trace():
@@ -57,7 +53,7 @@ def trace():
         tag = re.compile(r"<[^>]+>")
         return tag.sub("", text)
 
-    with tracer.start_span("get-python-jobs") as span:
+    with init_tracer("trial").start_span("get-python-jobs") as span:
         res = requests.get("https://jobs.github.com/positions.json?description=python")
         span.log_kv({"event": "get jobs count", "count": len(res.json())})
         span.set_tag("jobs-count", len(res.json()))
@@ -65,7 +61,7 @@ def trace():
         jobs_info = []
         for result in res.json():
             jobs = {}
-            with tracer.start_span("request-site") as site_span:
+            with init_tracer("trial").start_span("request-site") as site_span:
                 logger.info(f"Getting website for {result['company']}")
                 try:
                     jobs["description"] = remove_tags(result["description"])

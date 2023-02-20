@@ -10,6 +10,7 @@ COPY . ./
 ARG PROJECT_ID
 ENV PROJECT_ID ${PROJECT_ID}
 
+EXPOSE 8080
 
 # Install production dependencies.
 RUN apt-get update && \

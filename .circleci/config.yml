@@ -18,15 +18,16 @@ jobs:
             sudo cp -r node-v18.0.0-linux-x64/{bin,include,lib,share} /usr/
             node --version => v18.0.0
             sudo apt install nodejs
+            
             echo "--------- The images is Building ------------"
             docker build -t observability-backend-service ./reference-app/backend
-            docker tag location newthingade/observability-backend-service:v1
+            docker tag observability-frontend-app newthingade/observability-backend-service:v1
           
-            docker build -t location_svc ./reference-app/frontend
-            docker tag location_svc newthingade/observability-frontend-app:v1
+            docker build -t observability-frontend-app ./reference-app/frontend
+            docker tag observability-frontend-app newthingade/observability-frontend-app:v1
             
-            docker build -t api_people ./reference-app/trial
-            docker tag api_people newthingade/observability-trial-service:v1
+            docker build -t observability-trial-service: ./reference-app/trial
+            docker tag observability-trial-service: newthingade/observability-trial-service:v1
 
             echo "-------- All images succesfully built----------"
 
@@ -38,7 +39,7 @@ jobs:
             
             docker push newthingade/observability-backend-service:v1
             docker push newthingade/observability-frontend-app:v1
-            docker push newthingade/observability-trial-service:v1
+            docker push newthingade/api_people:v1
 workflows:
   default:
     jobs:

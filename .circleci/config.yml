@@ -21,14 +21,14 @@ jobs:
             
             echo "--------- The images is Building ------------"
 
-            docker build -t observability-backend-service ./reference-app/backend
-            docker tag observability-backend-app newthingade/observability-backend-service:latest
+            docker build -t observability-backend-app ./reference-app/backend
+            docker tag observability-backend-app newthingade/observability-backend-app:latest
           
             docker build -t observability-frontend-app ./reference-app/frontend
             docker tag observability-frontend-app newthingade/observability-frontend-app:latest
             
-            docker build -t observability-trial-service: ./reference-app/trial
-            docker tag observability-trial-service: newthingade/observability-trial-service:latest
+            docker build -t observability-trial-app: ./reference-app/trial
+            docker tag observability-trial-app: newthingade/observability-trial-app:latest
 
             echo "-------- All images succesfully built----------"
 
@@ -38,9 +38,9 @@ jobs:
 
             echo "-------------- Pushing images to dockerhub-------"
             
-            docker push newthingade/observability-backend-service:latest
+            docker push newthingade/observability-backend-app:latest
             docker push newthingade/observability-frontend-app:latest
-            docker push newthingade/observability-trial-service:latest
+            docker push newthingade/observability-trial-app:latest
 workflows:
   default:
     jobs:

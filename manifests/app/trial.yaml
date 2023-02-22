@@ -26,7 +26,7 @@ spec:
         env:
         - name: JAEGER_HOST
           value: app-tracer-agent.observability.svc.cluster.local
-        image: newthingade/observability-trial-app:latest
+        image: newthingade/observability-trial-app:v1
         ports:
         - name: trial-port
           protocol: TCP

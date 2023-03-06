@@ -13,6 +13,10 @@ from jaeger_client import Config
 s = Summary('request_processing_seconds', 'Time spent processing request')
 c = Counter('my_failures', 'Description of counter')
 
+app = Flask(__name__)
+FlaskInstrumentor().instrument_app(app)
+RequestsInstrumentor().instrument()
+
 def init_tracer(service):
 
     config = Config(

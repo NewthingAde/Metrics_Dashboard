@@ -70,7 +70,6 @@ metrics.register_default(
 )
     
 # Adding extra Items to metrics metric.
-@s.time()
 @app.route("/api")
 def my_api():
     answer = "something"
@@ -84,7 +83,6 @@ def my_api():
         return jsonify(response=answer)
     
 # Adding extra Items to metrics metric.
-@s.time()
 @app.route("/")
 def homepage():
     response = 'Hello World'
@@ -94,7 +92,6 @@ def homepage():
         return response
 
 # Adding extra items to metric.
-@s.time()
 @c.count_exceptions()
 @app.route("/star", methods=["POST"])
 def add_star():
@@ -117,7 +114,6 @@ def add_star():
     return jsonify({"result": output})
 
 # Adding extra items to metrics
-@s.time()
 def process_request_with_random_delay(t):
     """A dummy function that takes some time."""
     time.sleep(t)

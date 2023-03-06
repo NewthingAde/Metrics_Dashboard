@@ -17,6 +17,10 @@ app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 087756ba06775fe4a54aa576edbf84f63503dc40
 def init_tracer(service):
 
     config = Config(

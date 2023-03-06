@@ -9,20 +9,11 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from flask_opentracing import FlaskTracing
 from jaeger_client import Config
 
-# Create a metric to track time spent and requests made.
-s = Summary('request_processing_seconds', 'Time spent processing request')
-c = Counter('my_failures', 'Description of counter')
 
 app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 087756ba06775fe4a54aa576edbf84f63503dc40
 def init_tracer(service):
-
     config = Config(
         config={
             "sampler": {"type": "const", "param": 1},
@@ -85,6 +76,11 @@ def client_error():
 })
 def server_error():
     return "5xx Error", 500
+
+
+# Create a metric to track time spent and requests made.
+s = Summary('request_processing_seconds', 'Time spent processing request')
+c = Counter('my_failures', 'Description of counter')
 
 if __name__ == "__main__":
     app.run()

@@ -18,11 +18,7 @@ app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
 
-app.config['MONGO_DBNAME'] = 'example-mongodb'
-app.config['MONGO_URI'] = 'mongodb://example-mongodb-svc.default.svc.cluster.local:27017/example-mongodb'
-
 metrics = PrometheusMetrics(app)
-
 # static information as metric
 metrics.info("app_info", "Application info", version="1.0.3")
 
@@ -37,6 +33,19 @@ app.config[
 
 mongo = PyMongo(app)
 
+# Add prometheus wsgi middleware to route /metrics requests
+app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
+    '/metrics': make_wsgi_app()
+})
+
+# register additional default metrics
+metrics.register_default(
+    metrics.counter(
+        'request_by_path_counter', 'Request count by request path',
+        labels={'path': lambda: request.path}
+    )
+)
+
 def init_tracer(service):
 
     config = Config(
@@ -49,6 +58,7 @@ def init_tracer(service):
         validate=True,
         metrics_factory=PrometheusMetricsFactory(service_name_label=service),
     )
+
     # this call also sets opentracing.tracer
     return config.initialize_tracer()
 
@@ -56,20 +66,18 @@ tracer = init_tracer("backend")
 flask_tracer = FlaskTracing(tracer, True, app)
 parent_span = flask_tracer.get_span()
 
-# Add prometheus wsgi middleware to route /metrics requests
-app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
-    '/metrics': make_wsgi_app()
-})
+# Decorate function with metric.
+@s.time()
+@app.route("/")
+def homepage():
+    response = 'Hello World'
 
-# Additional default metrics
-metrics.register_default(
-    metrics.counter(
-        'request_by_path_counter', 'Request count by request path',
-        labels={'path': lambda: request.path}
-    )
-)
-    
-# Adding extra Items to metrics metric.
+    with tracer.start_span('homepage', child_of=parent_span) as span:
+        span.set_tag('message', response)
+        return response
+
+# Decorate function with metric.
+@s.time()
 @app.route("/api")
 def my_api():
     answer = "something"
@@ -81,17 +89,9 @@ def my_api():
 
         span.set_tag('message', answer)
         return jsonify(response=answer)
-    
-# Adding extra Items to metrics metric.
-@app.route("/")
-def homepage():
-    response = 'Hello World'
 
-    with tracer.start_span('homepage', child_of=parent_span) as span:
-        span.set_tag('message', response)
-        return response
-
-# Adding extra items to metric.
+# Decorate function with metric.
+@s.time()
 @c.count_exceptions()
 @app.route("/star", methods=["POST"])
 def add_star():
@@ -113,13 +113,14 @@ def add_star():
 
     return jsonify({"result": output})
 
-# Adding extra items to metrics
+# Decorate function with metric.
+@s.time()
 def process_request_with_random_delay(t):
     """A dummy function that takes some time."""
     time.sleep(t)
 
 
-# Endpoint to returns 4xx error
+# Register endpoint that returns 4xx error
 @app.route("/client-error")
 @metrics.summary('requests_by_status_4xx', 'Status Code', labels={
     'code': lambda r: '400'
@@ -127,7 +128,7 @@ def process_request_with_random_delay(t):
 def client_error():
     return "4xx Error", 400
 
-# Endpoint to returns 5xx error
+# Register endpoint that returns 5xx error
 @app.route("/server-error")
 @metrics.summary('requests_by_status_5xx', 'Status Code', labels={
     'code': lambda r: '500'
@@ -135,9 +136,7 @@ def client_error():
 def server_error():
     return "5xx Error", 500
 
-# Create a metric to track time spent and requests made.
-s = Summary('request_processing_seconds', 'Time spent processing request')
-c = Counter('my_failures', 'Description of counter')
+
 
 if __name__ == "__main__":
     app.run()

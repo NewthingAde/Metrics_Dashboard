@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: newthingade/observability-backend-app: v1
+        image: newthingade/observability-backend-app:v1
         ports:
         - name: backend-port
           containerPort: 8080
